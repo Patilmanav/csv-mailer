@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CSV Mailer</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d2e;
+      --surface2: #222538;
+      --border: #2d3148;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --dim: #64748b;
+      --purple: #6366f1;
+      --purple2: #7c3aed;
+      --purple-light: #a78bfa;
+      --green: #22c55e;
+      --red: #ef4444;
+      --blue: #60a5fa;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem
+    }
+
+    .container {
+      max-width: 920px;
+      margin: 0 auto
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--purple), var(--purple-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: .4rem
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: .95rem
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      margin-bottom: 1.5rem
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--purple-light);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem
+    }
+
+    .step {
+      background: var(--purple);
+      color: #fff;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-size: .75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0
+    }
+
+    /* Drop zone (CSV) */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 2.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: .2s;
+      position: relative
+    }
+
+    .drop-zone:hover,
+    .drop-zone.over {
+      border-color: var(--purple);
+      background: var(--surface2)
+    }
+
+    .drop-zone input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%
+    }
+
+    .drop-zone .icon {
+      font-size: 2.5rem;
+      margin-bottom: .75rem
+    }
+
+    .drop-zone p {
+      color: var(--muted);
+      font-size: .9rem
+    }
+
+    .drop-zone .fname {
+      color: var(--purple);
+      font-weight: 600;
+      margin-top: .5rem
+    }
+
+    /* Form */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem
+    }
+
+    @media(max-width:600px) {
+      .form-grid {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .fg {
+      display: flex;
+      flex-direction: column;
+      gap: .4rem
+    }
+
+    .fg.full {
+      grid-column: 1/-1
+    }
+
+    label {
+      font-size: .82rem;
+      color: var(--muted);
+      font-weight: 500
+    }
+
+    input,
+    select,
+    textarea {
+      background: #0a0c14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: .6rem .85rem;
+      font-size: .9rem;
+      font-family: inherit;
+      transition: border-color .2s;
+      width: 100%
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--purple)
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 160px;
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+      font-size: .83rem
+    }
+
+    .hint {
+      font-size: .76rem;
+      color: var(--dim);
+      margin-top: .25rem
+    }
+
+    /* CC tags */
+    .tag-wrap {
+      background: #0a0c14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .4rem .6rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+      align-items: center;
+      cursor: text;
+      min-height: 42px;
+      transition: border-color .2s
+    }
+
+    .tag-wrap:focus-within {
+      border-color: var(--purple)
+    }
+
+    .tag {
+      background: #312e81;
+      color: var(--purple-light);
+      border-radius: 20px;
+      padding: .18rem .65rem;
+      font-size: .8rem;
+      display: flex;
+      align-items: center;
+      gap: .35rem
+    }
+
+    .tag .x {
+      cursor: pointer;
+      color: #7c3aed
+    }
+
+    .tag .x:hover {
+      color: #f87171
+    }
+
+    .tag-input {
+      flex: 1;
+      min-width: 160px;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: .88rem;
+      padding: .2rem 0
+    }
+
+    /* Attachment zone */
+    .att-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+      cursor: pointer;
+      transition: .2s;
+      position: relative
+    }
+
+    .att-zone:hover,
+    .att-zone.over {
+      border-color: var(--purple);
+      background: var(--surface2)
+    }
+
+    .att-zone input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%
+    }
+
+    .att-list {
+      margin-top: .75rem;
+      display: flex;
+      flex-direction: column;
+      gap: .4rem
+    }
+
+    .att-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0a0c14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .5rem .85rem;
+      font-size: .85rem
+    }
+
+    .att-name {
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: .5rem
+    }
+
+    .att-sz {
+      color: var(--dim);
+      font-size: .75rem;
+      margin-left: .3rem
+    }
+
+    .att-rm {
+      color: var(--dim);
+      cursor: pointer;
+      font-size: 1rem
+    }
+
+    .att-rm:hover {
+      color: #f87171
+    }
+
+    /* Template mode tabs */
+    .mode-tabs {
+      display: flex;
+      gap: .5rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap
+    }
+
+    .tab {
+      padding: .5rem 1.1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: .85rem;
+      font-weight: 500;
+      transition: .2s
+    }
+
+    .tab:hover {
+      border-color: var(--purple);
+      color: var(--text)
+    }
+
+    .tab.active {
+      background: var(--purple);
+      border-color: var(--purple);
+      color: #fff
+    }
+
+    /* Template library grid */
+    .tmpl-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: .75rem;
+      margin-bottom: 1.25rem
+    }
+
+    .tmpl-card {
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: .2s;
+      background: #0a0c14
+    }
+
+    .tmpl-card:hover {
+      border-color: var(--purple);
+      background: var(--surface2)
+    }
+
+    .tmpl-card.selected {
+      border-color: var(--purple);
+      background: #1a1640
+    }
+
+    .tmpl-card .tc-name {
+      font-weight: 600;
+      font-size: .9rem;
+      margin-bottom: .3rem;
+      color: var(--text)
+    }
+
+    .tmpl-card .tc-desc {
+      font-size: .77rem;
+      color: var(--dim);
+      line-height: 1.5
+    }
+
+    /* Editor split */
+    .editor-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem
+    }
+
+    @media(max-width:680px) {
+      .editor-split {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .editor-pane label {
+      font-size: .82rem;
+      color: var(--muted);
+      font-weight: 500;
+      display: block;
+      margin-bottom: .4rem
+    }
+
+    /* Preview panel */
+    .preview-wrap {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      height: 400px;
+      display: flex;
+      flex-direction: column
+    }
+
+    .preview-toolbar {
+      background: var(--surface2);
+      padding: .5rem .75rem;
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0
+    }
+
+    .preview-toolbar span {
+      font-size: .78rem;
+      color: var(--muted)
+    }
+
+    .prev-btn {
+      padding: .25rem .7rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font-size: .76rem;
+      cursor: pointer;
+      transition: .2s
+    }
+
+    .prev-btn.active,
+    .prev-btn:hover {
+      background: var(--purple);
+      border-color: var(--purple);
+      color: #fff
+    }
+
+    .preview-frame {
+      flex: 1;
+      width: 100%;
+      border: none;
+      background: #fff
+    }
+
+    .preview-plain {
+      flex: 1;
+      padding: .75rem;
+      font-size: .83rem;
+      color: var(--muted);
+      white-space: pre-wrap;
+      overflow: auto;
+      line-height: 1.6;
+      font-family: 'Fira Code', monospace
+    }
+
+    /* Upload HTML file zone */
+    .html-file-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: .2s;
+      position: relative;
+      margin-bottom: 1rem
+    }
+
+    .html-file-zone:hover,
+    .html-file-zone.over {
+      border-color: var(--purple);
+      background: var(--surface2)
+    }
+
+    .html-file-zone input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%
+    }
+
+    .html-file-zone p {
+      color: var(--muted);
+      font-size: .88rem
+    }
+
+    .html-file-zone .loaded {
+      color: var(--purple);
+      font-weight: 600;
+      margin-top: .4rem
+    }
+
+    /* Summary bar */
+    .summary-bar {
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+      align-items: center;
+      background: var(--surface2);
+      border-radius: 8px;
+      padding: .6rem 1rem;
+      margin-top: 1rem;
+      font-size: .82rem;
+      color: var(--muted)
+    }
+
+    .summary-bar strong {
+      color: var(--text)
+    }
+
+    /* Send button */
+    button.send {
+      width: 100%;
+      padding: .85rem;
+      background: linear-gradient(135deg, var(--purple), var(--purple2));
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+      margin-top: 1rem
+    }
+
+    button.send:hover {
+      opacity: .9
+    }
+
+    button.send:active {
+      transform: scale(.99)
+    }
+
+    button.send:disabled {
+      opacity: .5;
+      cursor: not-allowed
+    }
+
+    /* Loader / results */
+    .loader {
+      display: none;
+      text-align: center;
+      padding: 1rem;
+      color: var(--muted);
+      font-size: .9rem
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--border);
+      border-top-color: var(--purple);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin-right: .5rem;
+      vertical-align: middle
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .results {
+      display: none;
+      padding: 1.25rem;
+      border-radius: 10px;
+      margin-top: 1rem
+    }
+
+    .results.ok {
+      background: #14532d22;
+      border: 1px solid #14532d
+    }
+
+    .results.err {
+      background: #7f1d1d22;
+      border: 1px solid #7f1d1d
+    }
+
+    .results h3 {
+      font-size: 1rem;
+      margin-bottom: .75rem
+    }
+
+    .results .stat {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: .4rem;
+      font-size: .88rem
+    }
+
+    .badge {
+      display: inline-block;
+      padding: .2rem .6rem;
+      border-radius: 20px;
+      font-size: .75rem;
+      font-weight: 600
+    }
+
+    .b-purple {
+      background: #312e81;
+      color: var(--purple-light)
+    }
+
+    .b-green {
+      background: #14532d;
+      color: #86efac
+    }
+
+    .b-red {
+      background: #7f1d1d;
+      color: #fca5a5
+    }
+
+    .b-blue {
+      background: #1e3a5f;
+      color: #93c5fd
+    }
+
+    /* Table */
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: .75rem
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .83rem
+    }
+
+    th {
+      background: var(--surface2);
+      color: var(--purple-light);
+      padding: .6rem .85rem;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border)
+    }
+
+    td {
+      padding: .55rem .85rem;
+      border-bottom: 1px solid #1a1e2e;
+      color: #cbd5e1
+    }
+
+    tr:last-child td {
+      border-bottom: none
+    }
+
+    code {
+      background: #1a1640;
+      padding: .1rem .4rem;
+      border-radius: 4px;
+      font-size: .82rem;
+      color: var(--purple-light)
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <header>
+      <h1>📬 CSV Mailer</h1>
+      <p>Upload CSV · Design your template · Send personalized HTML emails</p>
+    </header>
+
+    <!-- ── Step 1: CSV ──────────────────────────────────────────────── -->
+    <div class="card">
+      <h2><span class="step">1</span> Upload CSV File</h2>
+      <div class="drop-zone" id="csvZone">
+        <input type="file" id="csvFile" accept=".csv" />
+        <div class="icon">📄</div>
+        <p>Drag & drop your CSV here, or click to browse</p>
+        <p class="fname" id="csvName"></p>
+      </div>
+    </div>
+
+    <!-- ── Step 2: Preview ─────────────────────────────────────────── -->
+    <div class="card" id="previewCard" style="display:none">
+      <h2><span class="step">2</span> Preview & Select Email Column</h2>
+      <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
+        <span class="badge b-purple" id="totalRows"></span>
+        <div class="fg" style="flex:1;min-width:200px">
+          <label for="emailColSel">Email Column</label>
+          <select id="emailColSel"></select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="prevTable"></table>
+      </div>
+    </div>
+
+    <!-- ── Step 3: Template ────────────────────────────────────────── -->
+    <div class="card" id="tmplCard" style="display:none">
+      <h2><span class="step">3</span> Email Template</h2>
+
+      <!-- Mode tabs -->
+      <div class="mode-tabs">
+        <button class="tab active" data-mode="library">📚 Template Library</button>
+        <button class="tab" data-mode="editor">✏️ HTML Editor</button>
+        <button class="tab" data-mode="upload">📤 Upload HTML File</button>
+      </div>
+
+      <!-- ── Library mode ── -->
+      <div id="modeLibrary">
+        <div class="tmpl-grid" id="tmplGrid"></div>
+        <div id="libEditorWrap" style="display:none">
+          <div class="form-grid" style="margin-bottom:1rem">
+            <div class="fg full">
+              <label>Subject</label>
+              <input type="text" id="libSubject" placeholder="Subject line..." />
+            </div>
+          </div>
+          <div class="editor-split">
+            <div class="editor-pane">
+              <label>HTML Body <span style="color:var(--dim);font-weight:400">(edit freely)</span></label>
+              <textarea id="libHtml" rows="16" spellcheck="false"></textarea>
+              <p class="hint">Use <code>{{column_name}}</code> for personalization. Plain-text is auto-generated from
+                HTML.</p>
+              <div style="margin-top:.75rem">
+                <label style="display:block;margin-bottom:.3rem">Plain-text Fallback <span
+                    style="color:var(--dim);font-weight:400">(auto or edit)</span></label>
+                <textarea id="libPlain" rows="8" spellcheck="false"
+                  placeholder="Auto-generated from HTML when left blank..."></textarea>
+              </div>
+            </div>
+            <div class="editor-pane">
+              <label>Live Preview</label>
+              <div class="preview-wrap">
+                <div class="preview-toolbar">
+                  <button class="prev-btn active" data-pv="html">HTML</button>
+                  <button class="prev-btn" data-pv="plain">Plain</button>
+                  <span id="libPrevRow" style="margin-left:auto"></span>
+                </div>
+                <iframe class="preview-frame" id="libPreviewFrame" sandbox="allow-same-origin"></iframe>
+                <pre class="preview-plain" id="libPreviewPlain" style="display:none"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Editor mode ── -->
+      <div id="modeEditor" style="display:none">
+        <div class="fg full" style="margin-bottom:1rem">
+          <label>Subject</label>
+          <input type="text" id="edSubject" placeholder="Subject line..." />
+        </div>
+        <div class="editor-split">
+          <div class="editor-pane">
+            <label>HTML Body</label>
+            <textarea id="edHtml" rows="20" spellcheck="false"
+              placeholder="Paste or write your HTML email here...&#10;&#10;Use {{name}}, {{company}} etc. for personalization."></textarea>
+            <div style="margin-top:.75rem">
+              <label style="display:block;margin-bottom:.3rem">Plain-text Fallback</label>
+              <textarea id="edPlain" rows="8" spellcheck="false"
+                placeholder="Auto-generated from HTML when left blank..."></textarea>
+            </div>
+          </div>
+          <div class="editor-pane">
+            <label>Live Preview</label>
+            <div class="preview-wrap">
+              <div class="preview-toolbar">
+                <button class="prev-btn active" data-pv="html">HTML</button>
+                <button class="prev-btn" data-pv="plain">Plain</button>
+                <span id="edPrevRow" style="margin-left:auto"></span>
+              </div>
+              <iframe class="preview-frame" id="edPreviewFrame" sandbox="allow-same-origin"></iframe>
+              <pre class="preview-plain" id="edPreviewPlain" style="display:none"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Upload mode ── -->
+      <div id="modeUpload" style="display:none">
+        <div class="fg full" style="margin-bottom:1rem">
+          <label>Subject</label>
+          <input type="text" id="upSubject" placeholder="Subject line..." />
+        </div>
+        <div class="html-file-zone" id="htmlFileZone">
+          <input type="file" id="htmlFileInput" accept=".html,.htm" />
+          <p>📄 Drag & drop your <strong>.html</strong> template here, or click to browse</p>
+          <p class="loaded" id="htmlFileName"></p>
+        </div>
+        <div id="upEditorWrap" style="display:none">
+          <div class="editor-split">
+            <div class="editor-pane">
+              <label>HTML Body <span style="color:var(--dim);font-weight:400">(loaded from file — edit
+                  freely)</span></label>
+              <textarea id="upHtml" rows="20" spellcheck="false"></textarea>
+              <div style="margin-top:.75rem">
+                <label style="display:block;margin-bottom:.3rem">Plain-text Fallback</label>
+                <textarea id="upPlain" rows="8" spellcheck="false"
+                  placeholder="Auto-generated from HTML when left blank..."></textarea>
+              </div>
+            </div>
+            <div class="editor-pane">
+              <label>Live Preview</label>
+              <div class="preview-wrap">
+                <div class="preview-toolbar">
+                  <button class="prev-btn active" data-pv="html">HTML</button>
+                  <button class="prev-btn" data-pv="plain">Plain</button>
+                  <span id="upPrevRow" style="margin-left:auto"></span>
+                </div>
+                <iframe class="preview-frame" id="upPreviewFrame" sandbox="allow-same-origin"></iframe>
+                <pre class="preview-plain" id="upPreviewPlain" style="display:none"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Step 4: Options ─────────────────────────────────────────── -->
+    <form id="mailForm" style="display:none">
+      <div class="card">
+        <h2><span class="step">4</span> CC & Attachments</h2>
+        <p style="font-size:.8rem;color:var(--dim);margin-bottom:1.25rem">📡 Sending via server SMTP config
+          (<code>.env</code>)</p>
+
+        <div class="form-grid">
+          <div class="fg full">
+            <label>CC <span style="color:var(--dim);font-weight:400">(press Enter or comma to add)</span></label>
+            <div class="tag-wrap" id="ccWrap">
+              <input class="tag-input" id="ccInput" placeholder="cc@example.com" autocomplete="off" />
+            </div>
+            <input type="hidden" id="ccHidden" name="cc" value="" />
+          </div>
+        </div>
+
+        <div style="margin-top:1.25rem">
+          <label style="display:block;margin-bottom:.5rem">Attachments <span
+              style="color:var(--dim);font-weight:400">(optional)</span></label>
+          <div class="att-zone" id="attZone">
+            <input type="file" id="attInput" multiple />
+            <p>📎 Drag & drop files or click to browse</p>
+            <p style="font-size:.75rem;color:var(--dim);margin-top:.3rem">Attached to every email</p>
+          </div>
+          <div class="att-list" id="attList"></div>
+        </div>
+      </div>
+
+      <!-- ── Step 5: Send ── -->
+      <div class="card">
+        <div class="summary-bar" id="summaryBar" style="display:none">
+          <span>📊 <strong id="sRecip">0</strong> recipients</span>·
+          <span>📋 CC: <strong id="sCC">0</strong></span>·
+          <span>📎 Attachments: <strong id="sAtt">0</strong></span>
+        </div>
+        <button type="submit" class="send" id="sendBtn">🚀 Send Emails</button>
+        <div class="loader" id="loader"><span class="spinner"></span>Sending, please wait…</div>
+        <div class="results" id="results"></div>
+      </div>
+    </form>
+
+  </div><!-- /container -->
+
+  <script>
+    {% raw %}
+    // ═══════════════════════════════════════════════════════════════
+    // STATE
+    // ═══════════════════════════════════════════════════════════════
+    let csvFile = null;
+    let csvColumns = [];
+    let csvFirstRow = {};
+    let totalRecip = 0;
+    let ccTags = [];
+    let extraFiles = [];
+    let currentMode = 'library';   // library | editor | upload
+    let selectedTmpl = null;        // template id
+
+    // preview sub-mode per panel: html | plain
+    const pvMode = { lib: 'html', ed: 'html', up: 'html' };
+
+    // Debounce timer
+    let pvTimer = null;
+
+    // ═══════════════════════════════════════════════════════════════
+    // UTILS
+    // ═══════════════════════════════════════════════════════════════
+    const $ = id => document.getElementById(id);
+    const fmtBytes = b => b < 1024 ? b + ' B' : b < 1048576 ? (b / 1024).toFixed(1) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
+
+    function debounce(fn, ms = 400) {
+      return (...args) => { clearTimeout(pvTimer); pvTimer = setTimeout(() => fn(...args), ms); };
+    }
+
+    function htmlStrip(html) {
+      const d = document.createElement('div');
+      d.innerHTML = html;
+      return (d.textContent || d.innerText || '').replace(/\n{3,}/g, '\n\n').trim();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // CSV UPLOAD
+    // ═══════════════════════════════════════════════════════════════
+    const csvZone = $('csvZone');
+    csvZone.addEventListener('dragover', e => { e.preventDefault(); csvZone.classList.add('over') });
+    csvZone.addEventListener('dragleave', () => csvZone.classList.remove('over'));
+    csvZone.addEventListener('drop', e => { e.preventDefault(); csvZone.classList.remove('over'); if (e.dataTransfer.files[0]) loadCsv(e.dataTransfer.files[0]) });
+    $('csvFile').addEventListener('change', e => { if (e.target.files[0]) loadCsv(e.target.files[0]) });
+
+    async function loadCsv(file) {
+      csvFile = file;
+      $('csvName').textContent = file.name;
+      const fd = new FormData();
+      fd.append('file', file);
+      try {
+        const r = await fetch('/preview-csv', { method: 'POST', body: fd });
+        const d = await r.json();
+        if (!r.ok) { alert(d.detail || 'CSV error'); return; }
+
+        csvColumns = d.columns;
+        totalRecip = d.total_rows;
+        csvFirstRow = d.preview[0] || {};
+
+        // Populate select
+        const sel = $('emailColSel');
+        sel.innerHTML = '';
+        d.columns.forEach(c => {
+          const o = document.createElement('option');
+          o.value = c; o.textContent = c;
+          if (d.email_columns.includes(c)) o.selected = true;
+          sel.appendChild(o);
+        });
+
+        $('totalRows').textContent = `${d.total_rows} rows`;
+
+        // Preview table
+        const tbl = $('prevTable');
+        tbl.innerHTML = '';
+        const thead = tbl.createTHead(), hr = thead.insertRow();
+        d.columns.forEach(c => {
+          const th = document.createElement('th');
+          th.textContent = c;
+          if (d.email_columns.includes(c)) {
+            const b = document.createElement('span');
+            b.className = 'badge b-green'; b.textContent = ' ✉'; b.style.marginLeft = '4px';
+            th.appendChild(b);
+          }
+          hr.appendChild(th);
+        });
+        const tbody = tbl.createTBody();
+        d.preview.forEach(row => {
+          const tr = tbody.insertRow();
+          d.columns.forEach(c => { tr.insertCell().textContent = row[c] ?? ''; });
+        });
+
+        $('previewCard').style.display = 'block';
+        $('tmplCard').style.display = 'block';
+        $('mailForm').style.display = 'block';
+        updateSummary();
+        triggerPreview();
+      } catch (err) { alert('Failed: ' + err.message); }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // TEMPLATE MODE TABS
+    // ═══════════════════════════════════════════════════════════════
+    document.querySelectorAll('.mode-tabs .tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-tabs .tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentMode = btn.dataset.mode;
+        $('modeLibrary').style.display = currentMode === 'library' ? 'block' : 'none';
+        $('modeEditor').style.display = currentMode === 'editor' ? 'block' : 'none';
+        $('modeUpload').style.display = currentMode === 'upload' ? 'block' : 'none';
+        triggerPreview();
+      });
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // TEMPLATE LIBRARY
+    // ═══════════════════════════════════════════════════════════════
+    async function loadTemplateList() {
+      const r = await fetch('/api/templates');
+      const list = await r.json();
+      const grid = $('tmplGrid');
+      grid.innerHTML = '';
+      list.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'tmpl-card';
+        card.innerHTML = `<div class="tc-name">${t.name}</div><div class="tc-desc">${t.description}</div>`;
+        card.addEventListener('click', () => selectTemplate(t.id, card));
+        grid.appendChild(card);
+      });
+    }
+    loadTemplateList();
+
+    async function selectTemplate(id, cardEl) {
+      document.querySelectorAll('.tmpl-card').forEach(c => c.classList.remove('selected'));
+      cardEl.classList.add('selected');
+      selectedTmpl = id;
+
+      const r = await fetch(`/api/templates/${id}`);
+      const t = await r.json();
+
+      $('libSubject').value = t.subject;
+      $('libHtml').value = t.html;
+      $('libPlain').value = t.plaintext;
+      $('libEditorWrap').style.display = 'block';
+      triggerPreview();
+    }
+
+    // Live preview on editor changes
+    ['libHtml', 'libPlain', 'libSubject'].forEach(id => {
+      $(id).addEventListener('input', debounce(triggerPreview));
+    });
+    ['edHtml', 'edPlain', 'edSubject'].forEach(id => {
+      $(id).addEventListener('input', debounce(triggerPreview));
+    });
+    ['upHtml', 'upPlain', 'upSubject'].forEach(id => {
+      $(id).addEventListener('input', debounce(triggerPreview));
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // HTML FILE UPLOAD
+    // ═══════════════════════════════════════════════════════════════
+    const htmlFileZone = $('htmlFileZone');
+    htmlFileZone.addEventListener('dragover', e => { e.preventDefault(); htmlFileZone.classList.add('over') });
+    htmlFileZone.addEventListener('dragleave', () => htmlFileZone.classList.remove('over'));
+    htmlFileZone.addEventListener('drop', e => { e.preventDefault(); htmlFileZone.classList.remove('over'); if (e.dataTransfer.files[0]) loadHtmlFile(e.dataTransfer.files[0]) });
+    $('htmlFileInput').addEventListener('change', e => { if (e.target.files[0]) loadHtmlFile(e.target.files[0]) });
+
+    function loadHtmlFile(file) {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        $('upHtml').value = ev.target.result;
+        $('upPlain').value = '';
+        $('htmlFileName').textContent = file.name;
+        $('upEditorWrap').style.display = 'block';
+        triggerPreview();
+      };
+      reader.readAsText(file);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // LIVE PREVIEW ENGINE
+    // ═══════════════════════════════════════════════════════════════
+    function getActiveHtmlPlain() {
+      if (currentMode === 'library') return { html: $('libHtml').value, plain: $('libPlain').value };
+      if (currentMode === 'editor') return { html: $('edHtml').value, plain: $('edPlain').value };
+      if (currentMode === 'upload') return { html: $('upHtml').value, plain: $('upPlain').value };
+      return { html: '', plain: '' };
+    }
+
+    function renderWithRow(template, row) {
+      let out = template;
+      Object.entries(row).forEach(([k, v]) => { out = out.replaceAll(`{{${k}}}`, v ?? ''); });
+      return out;
+    }
+
+    function triggerPreview() {
+      if (!csvFirstRow || Object.keys(csvFirstRow).length === 0) return;
+
+      const { html, plain } = getActiveHtmlPlain();
+      const renderedHtml = renderWithRow(html, csvFirstRow);
+      const renderedPlain = plain.trim() ? renderWithRow(plain, csvFirstRow) : htmlStrip(renderedHtml);
+
+      const panelMap = {
+        library: { frame: 'libPreviewFrame', pre: 'libPreviewPlain', row: 'libPrevRow', pv: pvMode.lib },
+        editor: { frame: 'edPreviewFrame', pre: 'edPreviewPlain', row: 'edPrevRow', pv: pvMode.ed },
+        upload: { frame: 'upPreviewFrame', pre: 'upPreviewPlain', row: 'upPrevRow', pv: pvMode.up },
+      };
+
+      const p = panelMap[currentMode];
+      if (!p) return;
+
+      // Row label
+      const firstEmail = csvFirstRow[Object.keys(csvFirstRow)[0]] || 'preview';
+      $(p.row).textContent = `👤 ${firstEmail}`;
+
+      if (p.pv === 'html') {
+        $(p.frame).style.display = 'block';
+        $(p.pre).style.display = 'none';
+        const doc = $(p.frame).contentDocument || $(p.frame).contentWindow.document;
+        doc.open(); doc.write(renderedHtml); doc.close();
+      } else {
+        $(p.frame).style.display = 'none';
+        $(p.pre).style.display = 'block';
+        $(p.pre).textContent = renderedPlain;
+      }
+    }
+
+    // Preview toggle buttons (HTML / Plain)
+    document.querySelectorAll('.prev-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const pv = btn.dataset.pv;
+        const wrap = btn.closest('.preview-wrap');
+        wrap.querySelectorAll('.prev-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        // figure out which panel
+        const frameId = wrap.querySelector('.preview-frame').id;
+        if (frameId.startsWith('lib')) pvMode.lib = pv;
+        else if (frameId.startsWith('ed')) pvMode.ed = pv;
+        else if (frameId.startsWith('up')) pvMode.up = pv;
+        triggerPreview();
+      });
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // CC TAGS
+    // ═══════════════════════════════════════════════════════════════
+    $('ccWrap').addEventListener('click', () => $('ccInput').focus());
+    $('ccInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag($('ccInput').value.trim().replace(/,$/, '')); }
+      if (e.key === 'Backspace' && !$('ccInput').value && ccTags.length) removeTag(ccTags[ccTags.length - 1].id);
+    });
+    $('ccInput').addEventListener('blur', () => { if ($('ccInput').value.trim()) addTag($('ccInput').value.trim()); });
+
+    function addTag(email) {
+      if (!email || !email.includes('@')) return;
+      if (ccTags.find(t => t.email === email)) { $('ccInput').value = ''; return; }
+      const id = Date.now();
+      ccTags.push({ id, email });
+      $('ccInput').value = '';
+      const tag = document.createElement('div');
+      tag.className = 'tag'; tag.dataset.id = id;
+      tag.innerHTML = `<span>${email}</span><span class="x" data-id="${id}">×</span>`;
+      tag.querySelector('.x').addEventListener('click', () => removeTag(id));
+      $('ccWrap').insertBefore(tag, $('ccInput'));
+      syncCC(); updateSummary();
+    }
+
+    function removeTag(id) {
+      ccTags = ccTags.filter(t => t.id !== id);
+      const el = $('ccWrap').querySelector(`[data-id="${id}"]`);
+      if (el) el.remove();
+      syncCC(); updateSummary();
+    }
+
+    function syncCC() { $('ccHidden').value = ccTags.map(t => t.email).join(','); }
+
+    // ═══════════════════════════════════════════════════════════════
+    // ATTACHMENTS
+    // ═══════════════════════════════════════════════════════════════
+    const attZone = $('attZone');
+    attZone.addEventListener('dragover', e => { e.preventDefault(); attZone.classList.add('over') });
+    attZone.addEventListener('dragleave', () => attZone.classList.remove('over'));
+    attZone.addEventListener('drop', e => { e.preventDefault(); attZone.classList.remove('over'); addFiles(Array.from(e.dataTransfer.files)) });
+    $('attInput').addEventListener('change', e => { addFiles(Array.from(e.target.files)); e.target.value = ''; });
+
+    function addFiles(files) {
+      files.forEach(file => {
+        const id = Date.now() + Math.random();
+        extraFiles.push({ file, id });
+        const div = document.createElement('div');
+        div.className = 'att-item'; div.dataset.id = id;
+        div.innerHTML = `<span class="att-name">📎 ${file.name}<span class="att-sz">${fmtBytes(file.size)}</span></span><span class="att-rm" data-id="${id}">✕</span>`;
+        div.querySelector('.att-rm').addEventListener('click', () => {
+          extraFiles = extraFiles.filter(f => f.id !== id); div.remove(); updateSummary();
+        });
+        $('attList').appendChild(div);
+      });
+      updateSummary();
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // SUMMARY BAR
+    // ═══════════════════════════════════════════════════════════════
+    function updateSummary() {
+      $('summaryBar').style.display = 'flex';
+      $('sRecip').textContent = totalRecip;
+      $('sCC').textContent = ccTags.length;
+      $('sAtt').textContent = extraFiles.length;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // FORM SUBMIT
+    // ═══════════════════════════════════════════════════════════════
+    function getActiveSubjectHtmlPlain() {
+      if (currentMode === 'library') return { subject: $('libSubject').value, html: $('libHtml').value, plain: $('libPlain').value };
+      if (currentMode === 'editor') return { subject: $('edSubject').value, html: $('edHtml').value, plain: $('edPlain').value };
+      if (currentMode === 'upload') return { subject: $('upSubject').value, html: $('upHtml').value, plain: $('upPlain').value };
+      return { subject: '', html: '', plain: '' };
+    }
+
+    $('mailForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      if (!csvFile) { alert('Upload a CSV first.'); return; }
+
+      const { subject, html, plain } = getActiveSubjectHtmlPlain();
+      if (!subject.trim()) { alert('Please enter a subject line.'); return; }
+      if (!html.trim()) { alert('Please provide an email template.'); return; }
+
+      const fd = new FormData();
+      fd.append('file', csvFile);
+      fd.append('email_column', $('emailColSel').value);
+      fd.append('subject', subject);
+      fd.append('html_body', html);
+      fd.append('plain_body', plain);
+      fd.append('cc', $('ccHidden').value);
+      extraFiles.forEach(({ file }) => fd.append('attachments', file));
+
+      $('sendBtn').disabled = true;
+      $('loader').style.display = 'block';
+      $('results').style.display = 'none';
+
+      try {
+        const res = await fetch('/send-emails', { method: 'POST', body: fd });
+        const data = await res.json();
+        $('loader').style.display = 'none';
+        $('sendBtn').disabled = false;
+
+        if (!res.ok) {
+          $('results').className = 'results err';
+          $('results').innerHTML = `<h3>❌ Error</h3><p>${data.detail}</p>`;
+        } else {
+          let meta = '';
+          if (data.cc_count) meta += `<div class="stat"><span>CC recipients</span><span class="badge b-blue">${data.cc_count}</span></div>`;
+          if (data.attachment_count) meta += `<div class="stat"><span>Attachments per email</span><span class="badge b-blue">${data.attachment_count}</span></div>`;
+          let errHtml = '';
+          if (data.errors?.length) {
+            errHtml = '<div style="margin-top:.75rem"><p style="font-size:.82rem;color:var(--muted);margin-bottom:.4rem">Failed:</p>'
+              + data.errors.map(e => `<p style="font-size:.8rem;color:#fca5a5">• ${e.email} — ${e.error}</p>`).join('') + '</div>';
+          }
+          $('results').className = 'results ok';
+          $('results').innerHTML = `
+        <h3>✅ Done!</h3>
+        <div class="stat"><span>Total</span><span class="badge b-purple">${data.total}</span></div>
+        <div class="stat"><span>Sent</span><span class="badge b-green">${data.sent}</span></div>
+        <div class="stat"><span>Failed</span><span class="badge b-red">${data.failed}</span></div>
+        ${meta}${errHtml}`;
+        }
+        $('results').style.display = 'block';
+      } catch (err) {
+        $('loader').style.display = 'none';
+        $('sendBtn').disabled = false;
+        $('results').className = 'results err';
+        $('results').innerHTML = `<h3>❌ Error</h3><p>${err.message}</p>`;
+        $('results').style.display = 'block';
+      }
+    });
+    {% endraw %}
+  </script>
+</body>
+
+</html>
