@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, Form, Request, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 from typing import List, Optional
 import pandas as pd
 import io
@@ -13,7 +14,7 @@ from app.builtin_templates.templates import TEMPLATES
 
 load_dotenv()
 
-app = FastAPI(title="CSV Mailer")
+app = FastAPI(title="CSV Mailer", docs_url="/api/docs", redoc_url="/api/redoc")
 templates = Jinja2Templates(directory="templates")
 
 UPLOAD_DIR = "uploads"
@@ -35,6 +36,13 @@ def get_smtp_config_from_env() -> dict:
         "smtp_password": os.getenv("SMTP_PASSWORD"),
         "use_tls": os.getenv("USE_TLS", "true").lower() == "true",
     }
+
+
+# ── Health Check ───────────────────────────────────────────────────────────
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "service": "csv-mailer"}
 
 
 # ── Pages ──────────────────────────────────────────────────────────────────
