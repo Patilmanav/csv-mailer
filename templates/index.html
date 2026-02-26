@@ -997,7 +997,7 @@
     // TEMPLATE LIBRARY
     // ═══════════════════════════════════════════════════════════════
     async function loadTemplateList() {
-      const r = await fetch('/api/templates');
+      const r = await fetch('/email-automation/api/templates');
       const list = await r.json();
       const grid = $('tmplGrid');
       grid.innerHTML = '';
@@ -1016,7 +1016,7 @@
       cardEl.classList.add('selected');
       selectedTmpl = id;
 
-      const r = await fetch(`/api/templates/${id}`);
+      const r = await fetch(`/email-automation/api/templates/${id}`);
       const t = await r.json();
 
       $('libSubject').value = t.subject;
