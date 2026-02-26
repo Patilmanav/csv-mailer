@@ -930,7 +930,7 @@
       const fd = new FormData();
       fd.append('file', file);
       try {
-        const r = await fetch('/preview-csv', { method: 'POST', body: fd });
+        const r = await fetch('/email-automation/preview-csv', { method: 'POST', body: fd });
         const d = await r.json();
         if (!r.ok) { alert(d.detail || 'CSV error'); return; }
 
@@ -1221,7 +1221,7 @@
       $('results').style.display = 'none';
 
       try {
-        const res = await fetch('/send-emails', { method: 'POST', body: fd });
+        const res = await fetch('/email-automation/send-emails', { method: 'POST', body: fd });
         const data = await res.json();
         $('loader').style.display = 'none';
         $('sendBtn').disabled = false;
